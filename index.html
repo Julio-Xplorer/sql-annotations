@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anotaciones SQL - Estructura de Query</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: visible;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 300;
+        }
+
+        .content {
+            display: flex;
+            min-height: 600px;
+            position: relative;
+        }
+
+        .sql-container {
+            flex: 1;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            padding: 20px;
+            position: relative;
+            overflow: visible;
+        }
+
+        .sql-line {
+            padding: 2px 0;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .sql-line:hover {
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+        }
+
+        /* Colores de sintaxis SQL */
+        .keyword { color: #569cd6; font-weight: bold; }
+        .table { color: #9cdcfe; }
+        .column { color: #dcdcaa; }
+        .operator { color: #d7ba7d; }
+        .condition { color: #ce9178; }
+        .number { color: #b5cea8; }
+
+        /* Señaladores y anotaciones */
+        .annotation {
+            position: absolute;
+            left: 110%;
+            top: 0;
+            width: 280px;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 12px;
+            color: #495057;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateX(-20px);
+            z-index: 1000;
+        }
+
+        .sql-line:hover .annotation {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .annotation::before {
+            content: '';
+            position: absolute;
+            left: -10px;
+            top: 15px;
+            border: 5px solid transparent;
+            border-right-color: #e9ecef;
+        }
+
+        .annotation h4 {
+            margin: 0 0 8px 0;
+            color: #2c3e50;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .annotation p {
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        /* Colores específicos para diferentes tipos de anotaciones */
+        .select-annotation { border-color: #28a745; }
+        .select-annotation::before { border-right-color: #28a745; }
+
+        .from-annotation { border-color: #17a2b8; }
+        .from-annotation::before { border-right-color: #17a2b8; }
+
+        .join-annotation { border-color: #fd7e14; }
+        .join-annotation::before { border-right-color: #fd7e14; }
+
+        .where-annotation { border-color: #dc3545; }
+        .where-annotation::before { border-right-color: #dc3545; }
+
+        .order-annotation { border-color: #6f42c1; }
+        .order-annotation::before { border-right-color: #6f42c1; }
+
+        .limit-annotation { border-color: #20c997; }
+        .limit-annotation::before { border-right-color: #20c997; }
+
+        /* Panel de información lateral */
+        .info-panel {
+            width: 320px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-left: 1px solid #e9ecef;
+        }
+
+        .info-section {
+            margin-bottom: 25px;
+        }
+
+        .info-section h3 {
+            color: #2c3e50;
+            font-size: 16px;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 5px;
+        }
+
+        .join-types {
+            display: grid;
+            gap: 10px;
+        }
+
+        .join-type {
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            border-left: 4px solid #fd7e14;
+            font-size: 12px;
+        }
+
+        .join-type strong {
+            display: block;
+            color: #2c3e50;
+            margin-bottom: 4px;
+        }
+
+        .syntax-highlight {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 11px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗄️ Estructura de Query SQL con JOINs - Anotaciones Interactivas</h1>
+            <p>Pasa el cursor sobre cada línea para ver las explicaciones detalladas</p>
+        </div>
+        
+        <div class="content">
+            <div class="sql-container">
+                <div class="sql-line">
+                    <span class="keyword">SELECT</span> <span class="column">column</span>, <span class="column">another_column</span>, <span class="operator">…</span>
+                    <div class="annotation select-annotation">
+                        <h4>🎯 SELECT - Selección de Columnas</h4>
+                        <p>Define qué columnas queremos obtener del resultado. Puede incluir columnas de múltiples tablas cuando usamos JOINs.</p>
+                    </div>
+                </div>
+                
+                <div class="sql-line">
+                    <span class="keyword">FROM</span> <span class="table">mytable</span>
+                    <div class="annotation from-annotation">
+                        <h4>📋 FROM - Tabla Principal</h4>
+                        <p>Especifica la tabla principal desde la cual iniciamos la consulta. Es el punto de partida para los JOINs.</p>
+                    </div>
+                </div>
+                
+                <div class="sql-line">
+                    <span class="keyword">INNER/LEFT/RIGHT/FULL JOIN</span> <span class="table">another_table</span>
+                    <div class="annotation join-annotation">
+                        <h4>🔗 JOIN - Unión de Tablas</h4>
+                        <p>Combina registros de múltiples tablas basado en condiciones específicas. El tipo de JOIN determina qué registros se incluyen.</p>
+                    </div>
+                </div>
+                
+                <div class="sql-line">
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">ON</span> <span class="table">mytable</span>.<span class="column">id</span> <span class="operator">=</span> <span class="table">another_table</span>.<span class="column">matching_id</span>
+                    <div class="annotation join-annotation">
+                        <h4>⚡ ON - Condición de Unión</h4>
+                        <p>Define la condición que debe cumplirse para unir registros de las tablas. Generalmente relaciona claves primarias con foráneas.</p>
+                    </div>
+                </div>
+                
+                <div class="sql-line">
+                    <span class="keyword">WHERE</span> <span class="condition">condition(s)</span>
+                    <div class="annotation where-annotation">
+                        <h4>🔍 WHERE - Filtrado de Datos</h4>
+                        <p>Aplica condiciones para filtrar los registros resultantes. Se ejecuta después del JOIN pero antes del ORDER BY.</p>
+                    </div>
+                </div>
+                
+                <div class="sql-line">
+                    <span class="keyword">ORDER BY</span> <span class="column">column</span>, <span class="operator">…</span> <span class="keyword">ASC/DESC</span>
+                    <div class="annotation order-annotation">
+                        <h4>📊 ORDER BY - Ordenamiento</h4>
+                        <p>Ordena los resultados por una o más columnas. ASC = ascendente, DESC = descendente. Se ejecuta casi al final.</p>
+                    </div>
+                </div>
+                
+                <div class="sql-line">
+                    <span class="keyword">LIMIT</span> <span class="number">num_limit</span> <span class="keyword">OFFSET</span> <span class="number">num_offset</span>;
+                    <div class="annotation limit-annotation">
+                        <h4>📏 LIMIT/OFFSET - Paginación</h4>
+                        <p>LIMIT restringe el número de registros devueltos. OFFSET omite los primeros N registros. Útil para paginación.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-panel">
+                <div class="info-section">
+                    <h3>🔗 Tipos de JOIN</h3>
+                    <div class="join-types">
+                        <div class="join-type">
+                            <strong>INNER JOIN</strong>
+                            Solo registros que coinciden en ambas tablas
+                            <div class="syntax-highlight">A ∩ B</div>
+                        </div>
+                        <div class="join-type">
+                            <strong>LEFT JOIN</strong>
+                            Todos los registros de la tabla izquierda + coincidencias
+                            <div class="syntax-highlight">A + (A ∩ B)</div>
+                        </div>
+                        <div class="join-type">
+                            <strong>RIGHT JOIN</strong>
+                            Todos los registros de la tabla derecha + coincidencias
+                            <div class="syntax-highlight">B + (A ∩ B)</div>
+                        </div>
+                        <div class="join-type">
+                            <strong>FULL JOIN</strong>
+                            Todos los registros de ambas tablas
+                            <div class="syntax-highlight">A ∪ B</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <h3>⚡ Orden de Ejecución</h3>
+                    <ol style="font-size: 13px; line-height: 1.6;">
+                        <li><strong>FROM</strong> - Identifica tablas</li>
+                        <li><strong>JOIN</strong> - Une tablas</li>
+                        <li><strong>WHERE</strong> - Filtra registros</li>
+                        <li><strong>GROUP BY</strong> - Agrupa datos</li>
+                        <li><strong>HAVING</strong> - Filtra grupos</li>
+                        <li><strong>SELECT</strong> - Selecciona columnas</li>
+                        <li><strong>ORDER BY</strong> - Ordena resultados</li>
+                        <li><strong>LIMIT</strong> - Limita cantidad</li>
+                    </ol>
+                </div>
+                
+                <div class="info-section">
+                    <h3>💡 Consejos</h3>
+                    <ul style="font-size: 12px; line-height: 1.5;">
+                        <li>Usa índices en columnas de JOIN</li>
+                        <li>WHERE antes de JOIN cuando sea posible</li>
+                        <li>Especifica alias para tablas largas</li>
+                        <li>Limita resultados con LIMIT en desarrollo</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
